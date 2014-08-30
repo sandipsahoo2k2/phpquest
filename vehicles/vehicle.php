@@ -6,7 +6,7 @@
 require_once("../SQLRest.inc.php");
 session_start();
 
-class API extends SQLREST {
+class VEHICLE_SERVICE extends SQLREST {
 
 	public function __construct(){
 		parent::__construct();          // Init parent contructor
@@ -52,16 +52,6 @@ class API extends SQLREST {
 	}
 }
 
-// Initiiate Library
-if(isset($_SESSION['isAuth']))
-{
-	$api = new API;
-	$api->processApi();
-}
-else
-{
-	http_response_code(401);
-	echo json_encode(FALSE);
-}
-
+$service = new VEHICLE_SERVICE;
+$service->processApi();
 ?>
