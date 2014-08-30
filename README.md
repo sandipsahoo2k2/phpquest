@@ -29,5 +29,6 @@ both of these method actually internally calls get method.
 You Must Override
 =================
 
-* getDBServerArray() which returns the SQL Server information (refer : vehicle.ph)
+* getDBServerArray() which returns the SQL Server information in an array (refer : vehicle.ph)
+* getDBColumnDefaults() which returns the clumn names and their defaults in an array (refer : vehicle.ph)
 
