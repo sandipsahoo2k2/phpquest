@@ -1,11 +1,13 @@
 <?php
 
+require_once '../../includes/config.php'; // The mysql database connection script
+
 abstract class SQLREST {
 
 	public $_content_type = "application/json";
 	public $_request = array();
 
-	private $_method = "";
+	private $_method = "";		
 	private $_code = 200;
 	private $applyOverRide = false;
 
@@ -31,12 +33,14 @@ abstract class SQLREST {
 
 	abstract protected function getDBServerArray() ;
 	abstract protected function getDBColumnDefaults() ;
-
+	
 	/*
 	 *  Connect to Database
 	 */
 	private function dbConnect(){
-		$this->mysqli = new mysqli($this->DB_SERVER_DETAILS['server'], $this->DB_SERVER_DETAILS['user'], $this->DB_SERVER_DETAILS['password'], $this->DB_SERVER_DETAILS['table']);
+		global $mysqli;
+		$this->mysqli = $mysqli;
+		//$this->mysqli = new mysqli($this->DB_SERVER_DETAILS['server'], $this->DB_SERVER_DETAILS['user'], $this->DB_SERVER_DETAILS['password'], $this->DB_SERVER_DETAILS['table']);
 	}
 
 	public function getConnection()
@@ -58,9 +62,9 @@ abstract class SQLREST {
 	private function get_status_message(){
 		$status = array(
 				200 => 'OK',
-				201 => 'Created',
-				204 => 'No Content',
-				404 => 'Not Found',
+				201 => 'Created',  
+				204 => 'No Content',  
+				404 => 'Not Found',  
 				406 => 'Not Acceptable',
 				409 => 'Already Exist');
 		return ($status[$this->_code])?$status[$this->_code]:$status[500];
@@ -84,7 +88,7 @@ abstract class SQLREST {
 				$this->response('',406);
 				break;
 		}
-	}
+	}		
 
 	private function cleanInputs($data){
 		$clean_input = array();
@@ -100,20 +104,20 @@ abstract class SQLREST {
 			$clean_input = trim($data);
 		}
 		return $clean_input;
-	}
+	}		
 
 	private function set_headers(){
 		header("HTTP/1.1 ".$this->_code." ".$this->get_status_message());
 		header("Content-Type:".$this->_content_type);
 	}
 
-	protected function get(){
+	protected function get(){	
 		if($this->get_request_method() != "GET"){
 			$this->response('',406);
 		}
 		$query= $this->getQueryFromPayload($this->COLUMN_DEFAULTS, "SELECT");
 		$request_id = '';
-		if(in_array('_id', array_keys($this->_request)))
+		if(in_array('_id', array_keys($this->_request))) 
 		{
 			$request_id = $this->_request['_id']; //if request_id = 0 dont use empty()
 			$id = (int)$request_id;
@@ -131,7 +135,7 @@ abstract class SQLREST {
 			}
 			else
 			{
-				$result = $r->fetch_assoc();
+				$result = $r->fetch_assoc();	
 				$this->response($this->json($result), 200); // send user details
 			}
 		}
@@ -173,7 +177,7 @@ abstract class SQLREST {
 			$this->response('',406);
 		}
 		$id = (int)$this->_request['_id'];
-		if($id > 0){
+		if($id > 0){				
 			$query= $this->getQueryFromPayload($this->COLUMN_DEFAULTS, "DELETE");
 			$query .= " WHERE _id = $id";
 			$r = $this->mysqli->query($query) or die($this->mysqli->error.__LINE__);
@@ -197,19 +201,18 @@ abstract class SQLREST {
 		else
 		{
 			foreach($this->COLUMN_DEFAULTS as $key => $value)
-			{
-
+			{ 
 				if($TYPE == "SELECT")
 				{
-					$insertColumns .= $key . ',';
+					$insertColumns .= $key . ',';	
 				}
 				else
 				{
 					// Check the record received from socket request. If key does not exist, insert default into the array.
 					$desired_value = '';
-					if(!in_array($key, $incoming_keys))
+					if(!in_array($key, $incoming_keys)) 
 					{
-						switch ($value)
+						switch ($value) 
 						{
 							case "char":
 								$desired_value = "''"; //empty string
@@ -227,7 +230,20 @@ abstract class SQLREST {
 					}
 					else
 					{
-						$desired_value = "'" . $theInputArray[$key] . "'";
+						$temp = $theInputArray[$key];
+						/*if(empty($temp))
+						{
+							print '<pre>' . print_r("empty:". $temp, true) . '</pre>';
+						}*/
+						if(is_null($temp))
+						{
+							//print '<pre>' . print_r("is_null:". $temp, true) . '</pre>';
+							$desired_value = 'NULL';
+						}
+						else
+						{
+							$desired_value = "'" . $theInputArray[$key] . "'";
+						}
 					}
 					if ($TYPE == "UPDATE")
 					{
